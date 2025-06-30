@@ -3,12 +3,17 @@ use bevy_ecs_tilemap::prelude::*;
 
 const MAP_LENGTH: u32 = 8;
 
+// Set that collects systems 
+#[derive(SystemSet, Clone, Copy, Hash, PartialEq, Eq, Debug)] 
+pub struct SpawnMapSet;
+
 pub struct BoardPlugin;
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         app
             .init_resource::<TileHandleSquare>()
-            .add_systems(Startup, startup);
+            .add_systems(Startup, startup.in_set(SpawnMapSet))
+            .add_systems(Startup, spawn_tile_labels.after(SpawnMapSet));
     }
 }
 
@@ -96,3 +101,46 @@ fn fill_board(
 }
 // END OF BOARD SETUP
 
+#[derive(Component)]
+struct TileLabel(Entity);
+
+fn spawn_tile_labels(
+    mut commands: Commands,
+    tilemap_q: Query<(
+        &Transform,
+        &TilemapType,
+        &TilemapGridSize,
+        &TilemapTileSize,
+        &TileStorage,
+        &TilemapSize,
+        &TilemapAnchor,
+    )>,
+    tile_q: Query<&mut TilePos>, 
+) {
+    for (map_transform, map_type, grid_size, 
+        tile_size, tilemap_storage, map_size, anchor) in tilemap_q.iter() {
+            for tile_entity in tilemap_storage.iter().flatten() {
+                let tile_pos = tile_q.get(*tile_entity).unwrap();
+                let tile_center = tile_pos
+                    .center_in_world(map_size, grid_size, tile_size, map_type, anchor)
+                    .extend(1.0);
+                let transform = *map_transform * Transform::from_translation(tile_center);
+
+                let label_entity = commands
+                    .spawn((
+                        Text2d::new(format!("{}, {}", tile_pos.x, tile_pos.y)),
+                        TextFont {
+                            font_size: 14.0,
+                            ..default()
+                        },
+                        TextColor(Color::BLACK),
+                        TextLayout::new_with_justify(JustifyText::Center),
+                        transform,
+                    ))
+                    .id();
+                commands
+                    .entity(*tile_entity)
+                    .insert(TileLabel(label_entity));
+            }
+    }
+}
