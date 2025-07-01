@@ -1,5 +1,7 @@
 use bevy::prelude::*; 
+use bevy::color::palettes;
 use bevy_ecs_tilemap::prelude::*;
+use crate::cursor::CursorPos;
 
 const MAP_LENGTH: u32 = 8;
 
@@ -13,7 +15,8 @@ impl Plugin for BoardPlugin {
         app
             .init_resource::<TileHandleSquare>()
             .add_systems(Startup, startup.in_set(SpawnMapSet))
-            .add_systems(Startup, spawn_tile_labels.after(SpawnMapSet));
+            .add_systems(Startup, spawn_tile_labels.after(SpawnMapSet))
+            .add_systems(Update, highlight_tile_labels);
     }
 }
 
@@ -142,5 +145,71 @@ fn spawn_tile_labels(
                     .entity(*tile_entity)
                     .insert(TileLabel(label_entity));
             }
+    }
+}
+
+#[derive(Component)]
+struct HighlightedLabel;
+
+fn highlight_tile_labels(
+    mut commands: Commands,
+    cursor_pos: Res<CursorPos>,
+    tilemap_q: Query<(
+        &TilemapSize,
+        &TilemapGridSize,
+        &TilemapTileSize,
+        &TilemapType,
+        &TileStorage,
+        &Transform,
+        &TilemapAnchor,
+    )>,
+    highlighted_tiles_q: Query<Entity, With<HighlightedLabel>>,
+    tile_label_q: Query<&TileLabel>,
+    mut text_q: Query<&mut TextColor>,
+) {
+    // Un-highlight any previously highlighted tile labels.
+    for highlighted_tile_entity in highlighted_tiles_q.iter() {
+        if let Ok(label) = tile_label_q.get(highlighted_tile_entity) {
+            if let Ok(mut text_color) = text_q.get_mut(label.0) {
+                text_color.0 = Color::BLACK;
+                commands
+                    .entity(highlighted_tile_entity)
+                    .remove::<HighlightedLabel>();
+            }
+        }
+    }
+
+    for (map_size, grid_size, tile_size, map_type, tile_storage, map_transform, anchor) in
+        tilemap_q.iter()
+    {
+        // Grab the cursor position from the `Res<CursorPos>`
+        let cursor_pos: Vec2 = cursor_pos.0;
+        // We need to make sure that the cursor's world position is correct relative to the map
+        // due to any map transformation.
+        let cursor_in_map_pos: Vec2 = {
+            // Extend the cursor_pos vec3 by 0.0 and 1.0
+            let cursor_pos = Vec4::from((cursor_pos, 0.0, 1.0));
+            let cursor_in_map_pos = map_transform.compute_matrix().inverse() * cursor_pos;
+            cursor_in_map_pos.xy()
+        };
+        // Once we have a world position we can transform it into a possible tile position.
+        if let Some(tile_pos) = TilePos::from_world_pos(
+            &cursor_in_map_pos,
+            map_size,
+            grid_size,
+            tile_size,
+            map_type,
+            anchor,
+        ) {
+            // Highlight the relevant tile's label
+            if let Some(tile_entity) = tile_storage.get(&tile_pos) {
+                if let Ok(label) = tile_label_q.get(tile_entity) {
+                    if let Ok(mut text_color) = text_q.get_mut(label.0) {
+                        text_color.0 = palettes::tailwind::RED_600.into();
+                        commands.entity(tile_entity).insert(HighlightedLabel);
+                    }
+                }
+            }
+        }
     }
 }

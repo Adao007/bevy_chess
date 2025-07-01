@@ -3,12 +3,14 @@ use bevy::prelude::*;
 pub struct CursorPlugin;
 impl Plugin for CursorPlugin {
     fn build (&self, app: &mut App) {
-
+        app
+            .init_resource::<CursorPos>()
+            .add_systems(First, update_cursor_pos);
     }
 }
 
 #[derive(Resource)]
-pub struct CursorPos(Vec2); 
+pub struct CursorPos(pub Vec2); 
 impl Default for CursorPos {
     fn default() -> Self {
         // The cursor pos will be initialized to a far away place. It will be updated when the mouse moves. 
@@ -30,3 +32,4 @@ pub fn update_cursor_pos(
         }
     }
 }
+
