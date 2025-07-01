@@ -5,6 +5,8 @@ mod board;
 use board::BoardPlugin;
 mod cursor;
 use cursor::CursorPlugin;
+mod pieces;
+use pieces::PiecesPlugin;
 
 fn main() {
     App::new()
