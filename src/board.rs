@@ -9,21 +9,9 @@ const MAP_LENGTH: u32 = 8;
 #[derive(SystemSet, Clone, Copy, Hash, PartialEq, Eq, Debug)] 
 pub struct SpawnMapSet;
 
-pub struct BoardPlugin;
-impl Plugin for BoardPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .init_resource::<TileHandleSquare>()
-            .add_systems(Startup, startup.in_set(SpawnMapSet))
-            .add_systems(Startup, spawn_tile_labels.after(SpawnMapSet))
-            .add_systems(Update, highlight_tile_labels);
-    }
-}
-
 // Loads images for the squares on the board
 #[derive(Deref, Resource)]
 pub struct TileHandleSquare(Handle<Image>);
-
 impl FromWorld for TileHandleSquare {
     fn from_world(world: &mut World) -> Self {
         let asset_server = world.resource::<AssetServer>();
@@ -88,7 +76,7 @@ fn fill_board(
     commands.entity(tilemap_id.0).with_children(|parent| {
         for x in 0..size.x {
             for y in 0..size.y {
-                let tile_pos = TilePos{ x, y};
+                let tile_pos = TilePos{ x, y };
                 let tile_entity = parent
                     .spawn(TileBundle {
                         position: tile_pos,
@@ -211,5 +199,16 @@ fn highlight_tile_labels(
                 }
             }
         }
+    }
+}
+
+pub struct BoardPlugin;
+impl Plugin for BoardPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .init_resource::<TileHandleSquare>()
+            .add_systems(Startup, startup.in_set(SpawnMapSet))
+            .add_systems(Startup, spawn_tile_labels.after(SpawnMapSet))
+            .add_systems(Update, highlight_tile_labels);
     }
 }

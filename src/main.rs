@@ -12,8 +12,9 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins,
-            BoardPlugin,
-            CursorPlugin,
+            //BoardPlugin,
+            //CursorPlugin,
+            PiecesPlugin,
         ))
         .add_plugins(TilemapPlugin)
         .run();

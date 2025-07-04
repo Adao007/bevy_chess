@@ -1,14 +1,5 @@
 use bevy::prelude::*;
 
-pub struct CursorPlugin;
-impl Plugin for CursorPlugin {
-    fn build (&self, app: &mut App) {
-        app
-            .init_resource::<CursorPos>()
-            .add_systems(First, update_cursor_pos);
-    }
-}
-
 #[derive(Resource)]
 pub struct CursorPos(pub Vec2); 
 impl Default for CursorPos {
@@ -33,3 +24,11 @@ pub fn update_cursor_pos(
     }
 }
 
+pub struct CursorPlugin;
+impl Plugin for CursorPlugin {
+    fn build (&self, app: &mut App) {
+        app
+            .init_resource::<CursorPos>()
+            .add_systems(First, update_cursor_pos);
+    }
+}
