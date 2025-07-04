@@ -1,3 +1,5 @@
+#![allow(unused_variables)]
+
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
@@ -12,8 +14,8 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins,
-            //BoardPlugin,
-            //CursorPlugin,
+            BoardPlugin,
+            CursorPlugin,
             PiecesPlugin,
         ))
         .add_plugins(TilemapPlugin)
