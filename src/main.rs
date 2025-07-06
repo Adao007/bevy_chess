@@ -16,7 +16,7 @@ fn main() {
             DefaultPlugins,
             BoardPlugin,
             CursorPlugin,
-            PiecesPlugin,
+            //PiecesPlugin,
         ))
         .add_plugins(TilemapPlugin)
         .run();

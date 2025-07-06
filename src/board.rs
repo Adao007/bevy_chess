@@ -9,22 +9,37 @@ const MAP_LENGTH: u32 = 8;
 #[derive(SystemSet, Clone, Copy, Hash, PartialEq, Eq, Debug)] 
 pub struct SpawnMapSet;
 
-// Loads images for the squares on the board
-#[derive(Deref, Resource)]
-pub struct TileHandleSquare(Handle<Image>);
-impl FromWorld for TileHandleSquare {
-    fn from_world(world: &mut World) -> Self {
-        let asset_server = world.resource::<AssetServer>();
-        Self(asset_server.load("images.png"))
-    }
-}
+// // Loads images for the squares on the board
+// #[derive(Deref, Resource)]
+// pub struct TileHandleSquare(Handle<Image>);
+// impl FromWorld for TileHandleSquare {
+//     fn from_world(world: &mut World) -> Self {
+//         let asset_server = world.resource::<AssetServer>();
+//         Self(asset_server.load("small_ns.png"))
+//     }
+// }
+
+// #[derive(Deref, Resource)]
+// pub struct SecondTileHandleSquare(Handle<Image>);
+// impl FromWorld for SecondTileHandleSquare {
+//     fn from_world(world: &mut World) -> Self {
+//         let asset_server = world.resource::<AssetServer>();
+//         Self(asset_server.load("small_gs.png"))
+//     }
+// }
 
 fn startup(
     mut commands: Commands,
-    tile_handle_square: Res<TileHandleSquare>
+    asset_server: Res<AssetServer>
 ) {
     // Spawn Camera
     commands.spawn(Camera2d);
+
+    let image_handles = vec![
+        asset_server.load("small_ns.png"),
+        asset_server.load("small_gs.png"),
+    ];
+    let texture_vec = TilemapTexture::Vector(image_handles);
 
     let board_size = TilemapSize { 
         x: MAP_LENGTH,
@@ -42,7 +57,7 @@ fn startup(
     // If multiple layers of tiles exist you would have 
     let mut tile_storage = TileStorage::empty(board_size);
 
-    fill_board(
+    fill_board_nature(
         TileTextureIndex(0),
         board_size,
         tilemap_id,
@@ -50,7 +65,15 @@ fn startup(
         &mut tile_storage,
     );
 
-    let tile_size = TilemapTileSize {x: 64.0, y: 64.0};
+    fill_board_geo(
+        TileTextureIndex(1),
+        board_size,
+        tilemap_id,
+        &mut commands,
+        &mut tile_storage,
+    );
+
+    let tile_size = TilemapTileSize {x: 100.0, y: 100.0};
     let grid_size = tile_size.into();
     let map_type = TilemapType::default();
 
@@ -59,14 +82,14 @@ fn startup(
         map_type,
         size: board_size,
         storage: tile_storage,
-        texture: TilemapTexture::Single(tile_handle_square.clone()),
+        texture: texture_vec,
         tile_size,
         anchor: TilemapAnchor::Center,
         ..Default::default()
     });
 }
 
-fn fill_board(
+fn fill_board_nature(
     texture_index: TileTextureIndex,
     size: TilemapSize,
     tilemap_id: TilemapId,
@@ -76,16 +99,78 @@ fn fill_board(
     commands.entity(tilemap_id.0).with_children(|parent| {
         for x in 0..size.x {
             for y in 0..size.y {
-                let tile_pos = TilePos{ x, y };
-                let tile_entity = parent
-                    .spawn(TileBundle {
-                        position: tile_pos,
-                        tilemap_id,
-                        texture_index,
-                        ..Default::default()
-                    })    
-                    .id();
-                tile_storage.set(&tile_pos, tile_entity);
+                if x == 0 || x % 2 == 0 {
+                    if y == 0 || y % 2 == 0 {
+                        let tile_pos = TilePos{ x, y };
+                        let tile_entity = parent
+                            .spawn(TileBundle {
+                                position: tile_pos,
+                                tilemap_id,
+                                texture_index,
+                                ..Default::default()
+                            })    
+                            .id();
+                        tile_storage.set(&tile_pos, tile_entity);
+                    }
+                }
+                else {
+                    if y == 1 || y % 2 != 0 {
+                        let tile_pos = TilePos{ x, y };
+                        let tile_entity = parent
+                            .spawn(TileBundle {
+                                position: tile_pos,
+                                tilemap_id,
+                                texture_index,
+                                ..Default::default()
+                            })    
+                            .id();
+                        tile_storage.set(&tile_pos, tile_entity);
+                    } 
+                }
+            }
+        }
+    });
+}
+// END OF BOARD SETUP
+
+fn fill_board_geo(
+    texture_index: TileTextureIndex,
+    size: TilemapSize,
+    tilemap_id: TilemapId,
+    commands: &mut Commands,
+    tile_storage: &mut TileStorage,
+) {
+    commands.entity(tilemap_id.0).with_children(|parent| {
+        for x in 0..size.x {
+            for y in 0..size.y {
+                if x == 0 || x % 2 == 0 {
+                    if y == 1 || y % 2 != 0 {
+                        let tile_pos = TilePos{ x, y };
+                        let tile_entity = parent
+                            .spawn(TileBundle {
+                                position: tile_pos,
+                                tilemap_id,
+                                texture_index,
+                                ..Default::default()
+                            })    
+                            .id();
+                        tile_storage.set(&tile_pos, tile_entity);
+                    }
+                }
+                else {
+                    if y == 0 || y % 2 == 0 {
+                        let tile_pos = TilePos{ x, y };
+                        let tile_entity = parent
+                            .spawn(TileBundle {
+                                position: tile_pos,
+                                tilemap_id,
+                                texture_index,
+                                ..Default::default()
+                            })    
+                            .id();
+                        tile_storage.set(&tile_pos, tile_entity);
+                    } 
+                }
             }
         }
     });
@@ -206,7 +291,7 @@ pub struct BoardPlugin;
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         app
-            .init_resource::<TileHandleSquare>()
+        //    .init_resource::<TileHandleSquare>()
             .add_systems(Startup, startup.in_set(SpawnMapSet))
             .add_systems(Startup, spawn_tile_labels.after(SpawnMapSet))
             .add_systems(Update, highlight_tile_labels);
