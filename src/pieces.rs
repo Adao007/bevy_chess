@@ -19,38 +19,29 @@ pub enum PieceType {
     Pawn,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Component)]
 pub struct Piece {
     pub color: PieceColor,
     pub piece_type: PieceType, 
     // Current Position
-    pub x: u8,
-    pub y: u8,
+    tile_pos: TilePos,
 }
 
 fn spawn_pieces(
     mut commands: Commands, 
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    tilemap_q: Query<(
-        &Transform,
-        &TilemapType,
-        &TilemapGridSize,
-        &TilemapTileSize,
-        &TileStorage,
-        &TilemapSize,
-        &TilemapAnchor,
-    )>,
-    tile_q: Query<&mut TilePos>,
+    asset_server: Res<AssetServer>,
 ) {
-    //commands.spawn(Camera2d);
-
+    commands.spawn(Camera2d);
     commands.spawn((
-        Mesh2d(meshes.add(Rectangle::new(50.0, 50.0))),
-        MeshMaterial2d(materials.add(Color::from(RED))),
-        Transform::from_xyz(0.0, 20.0, 1.0),
-    ));
-
+        Sprite::from_image(asset_server.load("white_rook.png")),
+        Transform::from_xyz(0., 0., 1.0),
+    ))
+        .insert(
+            Piece{
+                color: PieceColor::White,
+                piece_type: PieceType::Rook,
+                tile_pos: TilePos{ x: 0, y: 0},
+            }); 
 }
 
 pub struct PiecesPlugin;

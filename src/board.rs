@@ -9,25 +9,6 @@ const MAP_LENGTH: u32 = 8;
 #[derive(SystemSet, Clone, Copy, Hash, PartialEq, Eq, Debug)] 
 pub struct SpawnMapSet;
 
-// // Loads images for the squares on the board
-// #[derive(Deref, Resource)]
-// pub struct TileHandleSquare(Handle<Image>);
-// impl FromWorld for TileHandleSquare {
-//     fn from_world(world: &mut World) -> Self {
-//         let asset_server = world.resource::<AssetServer>();
-//         Self(asset_server.load("small_ns.png"))
-//     }
-// }
-
-// #[derive(Deref, Resource)]
-// pub struct SecondTileHandleSquare(Handle<Image>);
-// impl FromWorld for SecondTileHandleSquare {
-//     fn from_world(world: &mut World) -> Self {
-//         let asset_server = world.resource::<AssetServer>();
-//         Self(asset_server.load("small_gs.png"))
-//     }
-// }
-
 fn startup(
     mut commands: Commands,
     asset_server: Res<AssetServer>
@@ -46,15 +27,8 @@ fn startup(
         y: MAP_LENGTH,
     };
 
-    // Create a tilemap entity a little early, this entity will tell each tile which tilemap entity
-    // it is associated with. Using TilemapId component on each tile, then we will insert the TilemapBundle 
-    // bundle on the entity which will have necessary components such as TileStorage... 
     let tilemap_entity = commands.spawn_empty().id(); 
-    
     let tilemap_id = TilemapId(tilemap_entity);
-    // To create a map, we will need the 'TileStorage' Component.
-    // This component is a grid of tile entities and will track each of the tiles in the world. 
-    // If multiple layers of tiles exist you would have 
     let mut tile_storage = TileStorage::empty(board_size);
 
     fill_board_nature(
