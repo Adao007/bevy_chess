@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
+use super::position::*;
 use bevy::color::palettes::basic::RED;
 use super::cursor::*;
 
@@ -24,30 +25,32 @@ pub struct Piece {
     pub color: PieceColor,
     pub piece_type: PieceType, 
     // Current Position
-    tile_pos: TilePos,
+    
 }
 
 fn spawn_pieces(
     mut commands: Commands, 
     asset_server: Res<AssetServer>,
+    board: Res<Placement>,
 ) {
-    commands.spawn(Camera2d);
-    commands.spawn((
-        Sprite::from_image(asset_server.load("white_rook.png")),
-        Transform::from_xyz(0., 0., 1.0),
-    ))
-        .insert(
-            Piece{
-                color: PieceColor::White,
-                piece_type: PieceType::Rook,
-                tile_pos: TilePos{ x: 0, y: 0},
-            }); 
+    if let Some(&(x, y)) = board.positions.get(&"A1".to_string()) {
+        commands.spawn((
+            Sprite::from_image(asset_server.load("white_rook.png")),
+            Transform::from_xyz(x, y, 1.0),
+        ))
+            .insert(
+                Piece{
+                    color: PieceColor::White,
+                    piece_type: PieceType::Rook,
+                    // TODO: position variable later
+                }); 
+            }
 }
 
 pub struct PiecesPlugin;
 impl Plugin for PiecesPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Startup, spawn_pieces);
+            .add_systems(Startup, spawn_pieces.after(setup_placement));
     }
 }
