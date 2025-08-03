@@ -143,6 +143,8 @@ fn spawn_pawns(
     asset_server: Res<AssetServer>,
     board: Res<Placement>,
 ) {
+
+    // Spawning the White Pawns
     for i in 1..=8 {
         if let Some(&(x, y)) = board.positions.get(&format!("B{}", i)) {
             commands.spawn((
@@ -156,6 +158,22 @@ fn spawn_pawns(
                         // TODO: position variable later
                 });
         } 
+    }
+
+    // Spawning the Black Pawns 
+    for i in 1..=8 {
+        if let Some(&(x, y)) = board.positions.get(&format!("G{}", i)) {
+            commands.spawn((
+                Sprite::from_image(asset_server.load("black_pawn.png")),
+                Transform::from_xyz(x, y, 1.0),
+            ))
+                .insert(
+                    Piece {
+                        color: PieceColor::Black,
+                        piece_type: PieceType::Pawn,
+                    
+                });
+        }
     }
 }
 
