@@ -28,113 +28,59 @@ pub struct Piece {
     
 }
 
-fn spawn_pieces(
+fn spawn_black_pieces(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    board: Res<Placement>,
+) {
+    let names = vec!["black_rook.png", "black_knight.png", "black_bishop.png",
+                                        "black_queen.png", "black_king.png", "black_bishop.png",
+                                        "black_knight.png", "black_rook.png"];
+    let types = vec![PieceType::Rook, PieceType::Knight, PieceType::Bishop,
+                                    PieceType::King, PieceType::Queen, PieceType::Bishop,
+                                    PieceType::Knight, PieceType::Rook];
+
+    for i in 1..=8 {
+        if let Some(&(x, y)) = board.positions.get(&format!("H{}", i)) {
+            commands.spawn((
+                Sprite::from_image(asset_server.load(names[i - 1])),
+                Transform::from_xyz(x, y, 1.0),
+            ))
+                .insert(
+                    Piece { 
+                        color: PieceColor::Black, 
+                        piece_type: types[i - 1] 
+                        // TODO: position variable later
+                });
+        }
+    }                                
+}
+
+fn spawn_white_pieces(
     mut commands: Commands, 
     asset_server: Res<AssetServer>,
     board: Res<Placement>,
 ) {
-    if let Some(&(x, y)) = board.positions.get(&"A1".to_string()) {
-        commands.spawn((
-            Sprite::from_image(asset_server.load("white_rook.png")),
-            Transform::from_xyz(x, y, 1.0),
-        ))
-            .insert(
-                Piece{
-                    color: PieceColor::White,
-                    piece_type: PieceType::Rook,
-                    // TODO: position variable later
-                }); 
-    }
+    let names = vec!["white_rook.png", "white_knight.png", "white_bishop.png", 
+                                        "white_queen.png", "white_king.png", "white_bishop.png",
+                                        "white_knight.png", "white_rook.png"];
+    let types = vec![PieceType::Rook, PieceType::Knight, PieceType::Bishop, 
+                                        PieceType::Queen, PieceType::King, PieceType::Bishop, 
+                                        PieceType::Knight, PieceType::Rook];
 
-    if let Some(&(x, y)) = board.positions.get(&"A2".to_string()) {
+    for i in 1..=8 {
+        if let Some(&(x, y)) = board.positions.get(&format!("A{}", i)) {
         commands.spawn((
-            Sprite::from_image(asset_server.load("white_knight.png")),
+            Sprite::from_image(asset_server.load(names[i - 1])),
             Transform::from_xyz(x, y, 1.0),
         ))
             .insert(
                 Piece{
                     color: PieceColor::White,
-                    piece_type: PieceType::Knight,
+                    piece_type: types[i - 1],
                     // TODO: position variable later
                 }); 
-    }
-
-    if let Some(&(x, y)) = board.positions.get(&"A3".to_string()) {
-        commands.spawn((
-            Sprite::from_image(asset_server.load("white_bishop.png")),
-            Transform::from_xyz(x, y, 1.0),
-        ))
-            .insert(
-                Piece{
-                    color: PieceColor::White,
-                    piece_type: PieceType::Bishop,
-                    // TODO: position variable later
-                }); 
-    }
-
-    if let Some(&(x, y)) = board.positions.get(&"A4".to_string()) {
-        commands.spawn((
-            Sprite::from_image(asset_server.load("white_queen.png")),
-            Transform::from_xyz(x, y, 1.0),
-        ))
-            .insert(
-                Piece{
-                    color: PieceColor::White,
-                    piece_type: PieceType::Queen,
-                    // TODO: position variable later
-                }); 
-    }
-
-    if let Some(&(x, y)) = board.positions.get(&"A5".to_string()) {
-        commands.spawn((
-            Sprite::from_image(asset_server.load("white_king.png")),
-            Transform::from_xyz(x, y, 1.0),
-        ))
-            .insert(
-                Piece{
-                    color: PieceColor::White,
-                    piece_type: PieceType::King,
-                    // TODO: position variable later
-                }); 
-    }
-
-    if let Some(&(x, y)) = board.positions.get(&"A6".to_string()) {
-        commands.spawn((
-            Sprite::from_image(asset_server.load("white_bishop.png")),
-            Transform::from_xyz(x, y, 1.0),
-        ))
-            .insert(
-                Piece{
-                    color: PieceColor::White,
-                    piece_type: PieceType::Bishop,
-                    // TODO: position variable later
-                }); 
-    }
-
-    if let Some(&(x, y)) = board.positions.get(&"A7".to_string()) {
-        commands.spawn((
-            Sprite::from_image(asset_server.load("white_knight.png")),
-            Transform::from_xyz(x, y, 1.0),
-        ))
-            .insert(
-                Piece{
-                    color: PieceColor::White,
-                    piece_type: PieceType::Knight,
-                    // TODO: position variable later
-                }); 
-    }
-
-    if let Some(&(x, y)) = board.positions.get(&"A8".to_string()) {
-        commands.spawn((
-            Sprite::from_image(asset_server.load("white_rook.png")),
-            Transform::from_xyz(x, y, 1.0),
-        ))
-            .insert(
-                Piece{
-                    color: PieceColor::White,
-                    piece_type: PieceType::Rook,
-                    // TODO: position variable later
-                }); 
+        }
     }
 }
 
@@ -143,7 +89,6 @@ fn spawn_pawns(
     asset_server: Res<AssetServer>,
     board: Res<Placement>,
 ) {
-
     // Spawning the White Pawns
     for i in 1..=8 {
         if let Some(&(x, y)) = board.positions.get(&format!("B{}", i)) {
@@ -159,7 +104,7 @@ fn spawn_pawns(
                 });
         } 
     }
-
+    
     // Spawning the Black Pawns 
     for i in 1..=8 {
         if let Some(&(x, y)) = board.positions.get(&format!("G{}", i)) {
@@ -171,7 +116,7 @@ fn spawn_pawns(
                     Piece {
                         color: PieceColor::Black,
                         piece_type: PieceType::Pawn,
-                    
+                        // TODO: position variable later
                 });
         }
     }
@@ -181,7 +126,8 @@ pub struct PiecesPlugin;
 impl Plugin for PiecesPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Startup, spawn_pieces.after(setup_placement))
+            .add_systems(Startup, spawn_black_pieces.after(setup_placement))
+            .add_systems(Startup, spawn_white_pieces.after(setup_placement))
             .add_systems(Startup, spawn_pawns.after(setup_placement));
     }
 }
