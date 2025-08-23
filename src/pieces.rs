@@ -60,7 +60,7 @@ fn spawn_black_pieces(
     board: Res<Placement>,
 ) {
     let names = vec!["black_rook.png", "black_knight.png", "black_bishop.png",
-                                        "black_queen.png", "black_king.png", "black_bishop.png",
+                                        "nature_queen.png", "black_king.png", "black_bishop.png",
                                         "black_knight.png", "black_rook.png"];
     let types = vec![PieceType::Rook, PieceType::Knight, PieceType::Bishop,
                                     PieceType::King, PieceType::Queen, PieceType::Bishop,
@@ -168,8 +168,6 @@ fn grab(
     transform.translation.x = cursor_pos.0.unwrap().x; 
     transform.translation.y = cursor_pos.0.unwrap().y;
 }
-
-
 
 pub struct PiecesPlugin;
 impl Plugin for PiecesPlugin {
