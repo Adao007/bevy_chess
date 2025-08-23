@@ -1,7 +1,5 @@
 use bevy::prelude::*; 
-use bevy::color::palettes;
 use bevy_ecs_tilemap::prelude::*;
-use crate::cursor::CursorPos;
 
 const MAP_LENGTH: u32 = 8;
 
@@ -9,12 +7,15 @@ const MAP_LENGTH: u32 = 8;
 #[derive(SystemSet, Clone, Copy, Hash, PartialEq, Eq, Debug)] 
 pub struct SpawnMapSet;
 
+#[derive(Component)]
+pub struct MainCamera;
+
 fn startup(
     mut commands: Commands,
     asset_server: Res<AssetServer>
 ) {
     // Spawn Camera
-    commands.spawn(Camera2d);
+    commands.spawn((Camera2d, MainCamera));
 
     let image_handles = vec![
         asset_server.load("small_ns.png"),
@@ -151,123 +152,11 @@ fn fill_board_geo(
 }
 // END OF BOARD SETUP
 
-#[derive(Component)]
-struct TileLabel(Entity);
-
-fn spawn_tile_labels(
-    mut commands: Commands,
-    tilemap_q: Query<(
-        &Transform,
-        &TilemapType,
-        &TilemapGridSize,
-        &TilemapTileSize,
-        &TileStorage,
-        &TilemapSize,
-        &TilemapAnchor,
-    )>,
-    tile_q: Query<&mut TilePos>, 
-) {
-    for (map_transform, map_type, grid_size, 
-        tile_size, tilemap_storage, map_size, anchor) in tilemap_q.iter() {
-            for tile_entity in tilemap_storage.iter().flatten() {
-                let tile_pos = tile_q.get(*tile_entity).unwrap();
-                let tile_center = tile_pos
-                    .center_in_world(map_size, grid_size, tile_size, map_type, anchor)
-                    .extend(1.0);
-                let transform = *map_transform * Transform::from_translation(tile_center);
-
-                let label_entity = commands
-                    .spawn((
-                        Text2d::new(format!("{}, {}", tile_pos.x, tile_pos.y)),
-                        TextFont {
-                            font_size: 14.0,
-                            ..default()
-                        },
-                        TextColor(Color::BLACK),
-                        TextLayout::new_with_justify(JustifyText::Center),
-                        transform,
-                    ))
-                    .id();
-                commands
-                    .entity(*tile_entity)
-                    .insert(TileLabel(label_entity));
-            }
-    }
-}
-
-#[derive(Component)]
-struct HighlightedLabel;
-
-fn highlight_tile_labels(
-    mut commands: Commands,
-    cursor_pos: Res<CursorPos>,
-    tilemap_q: Query<(
-        &TilemapSize,
-        &TilemapGridSize,
-        &TilemapTileSize,
-        &TilemapType,
-        &TileStorage,
-        &Transform,
-        &TilemapAnchor,
-    )>,
-    highlighted_tiles_q: Query<Entity, With<HighlightedLabel>>,
-    tile_label_q: Query<&TileLabel>,
-    mut text_q: Query<&mut TextColor>,
-) {
-    // Un-highlight any previously highlighted tile labels.
-    for highlighted_tile_entity in highlighted_tiles_q.iter() {
-        if let Ok(label) = tile_label_q.get(highlighted_tile_entity) {
-            if let Ok(mut text_color) = text_q.get_mut(label.0) {
-                text_color.0 = Color::BLACK;
-                commands
-                    .entity(highlighted_tile_entity)
-                    .remove::<HighlightedLabel>();
-            }
-        }
-    }
-
-    for (map_size, grid_size, tile_size, map_type, tile_storage, map_transform, anchor) in
-        tilemap_q.iter()
-    {
-        // Grab the cursor position from the `Res<CursorPos>`
-        let cursor_pos: Vec2 = cursor_pos.0;
-        // We need to make sure that the cursor's world position is correct relative to the map
-        // due to any map transformation.
-        let cursor_in_map_pos: Vec2 = {
-            // Extend the cursor_pos vec3 by 0.0 and 1.0
-            let cursor_pos = Vec4::from((cursor_pos, 0.0, 1.0));
-            let cursor_in_map_pos = map_transform.compute_matrix().inverse() * cursor_pos;
-            cursor_in_map_pos.xy()
-        };
-        // Once we have a world position we can transform it into a possible tile position.
-        if let Some(tile_pos) = TilePos::from_world_pos(
-            &cursor_in_map_pos,
-            map_size,
-            grid_size,
-            tile_size,
-            map_type,
-            anchor,
-        ) {
-            // Highlight the relevant tile's label
-            if let Some(tile_entity) = tile_storage.get(&tile_pos) {
-                if let Ok(label) = tile_label_q.get(tile_entity) {
-                    if let Ok(mut text_color) = text_q.get_mut(label.0) {
-                        text_color.0 = palettes::tailwind::RED_600.into();
-                        commands.entity(tile_entity).insert(HighlightedLabel);
-                    }
-                }
-            }
-        }
-    }
-}
-
 pub struct BoardPlugin;
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         app
         //    .init_resource::<TileHandleSquare>()
-            .add_systems(Startup, startup.in_set(SpawnMapSet))
-            .add_systems(Startup, spawn_tile_labels.after(SpawnMapSet))
-            .add_systems(Update, highlight_tile_labels);
+            .add_systems(Startup, startup.in_set(SpawnMapSet));
     }
 }

@@ -1,34 +1,34 @@
 use bevy::prelude::*;
+use super::board::*;
 
-#[derive(Resource)]
-pub struct CursorPos(pub Vec2); 
-impl Default for CursorPos {
-    fn default() -> Self {
-        // The cursor pos will be initialized to a far away place. It will be updated when the mouse moves. 
-        Self(Vec2::new(-1000.0, -1000.0))
-    }
-}
+#[derive(Resource, Default)]
+pub struct MouseCoords(Option<Vec2>);
+
+#[derive(Resource, Debug, Default, Deref)]
+pub struct MouseWorldCoords(pub Option<Vec2>);
 
 // Cursor position will be updated on any 'CursorMoved' events. 
 pub fn update_cursor_pos(
-    camera_q: Query<(&GlobalTransform, &Camera)>,
-    mut cursor_moved_events: EventReader<CursorMoved>,
-    mut cursor_pos: ResMut<CursorPos>,
+    camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
+    window: Single<&Window>,
+    mut mouse_coords: ResMut<MouseCoords>,
+    mut mouse_world_coords: ResMut<MouseWorldCoords>,
 ) {
-    for cursor_moved in cursor_moved_events.read() {
-        for (cam_t, cam) in camera_q.iter() {
-            if let Ok(pos) = cam.viewport_to_world_2d(cam_t, cursor_moved.position) {
-                *cursor_pos = CursorPos(pos);
-            }
-        }
-    }
+    mouse_coords.0 = window.cursor_position();
+    mouse_world_coords.0 = window.cursor_position().map(|pos| {
+    let (camera, camera_transform) = camera.into_inner();
+        camera
+            .viewport_to_world_2d(camera_transform, pos)
+            .unwrap_or(vec2(0.0, 0.0))
+    });
 }
 
 pub struct CursorPlugin;
 impl Plugin for CursorPlugin {
     fn build (&self, app: &mut App) {
         app
-            .init_resource::<CursorPos>()
-            .add_systems(First, update_cursor_pos);
+            .init_resource::<MouseCoords>()
+            .init_resource::<MouseWorldCoords>()
+            .add_systems(Update, update_cursor_pos);
     }
 }

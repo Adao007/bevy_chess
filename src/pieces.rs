@@ -1,8 +1,36 @@
 use bevy::prelude::*;
-use bevy_ecs_tilemap::prelude::*;
+use std::fmt::Debug;
 use super::position::*;
-use bevy::color::palettes::basic::RED;
 use super::cursor::*;
+
+struct Helper; 
+impl Helper {
+    fn drag<E: Debug + Clone + Reflect>() -> impl Fn(Trigger<E>, Commands, Query<Entity, With<Pickable>>) {
+        move |ev, mut commands, mut sprites| {
+            let Ok(sprite) = sprites.get_mut(ev.target()) else {
+                return; 
+            }; 
+
+            commands.entity(sprite).insert(Draggable);
+        }
+    }
+
+    fn drop<E: Debug + Clone + Reflect>() -> impl Fn(Trigger<E>, Commands, Query<Entity, With<Draggable>>) {
+        move |ev, mut commands, mut sprites| {
+            let Ok(sprite) = sprites.get_mut(ev.target()) else {
+                return;
+            };
+
+            commands.entity(sprite).remove::<Draggable>();
+        }
+    }
+}
+
+#[derive(Component)]
+struct Movable; 
+
+#[derive(Component)]
+struct Draggable; 
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum PieceColor {
@@ -23,9 +51,7 @@ pub enum PieceType {
 #[derive(Clone, Copy, Component)]
 pub struct Piece {
     pub color: PieceColor,
-    pub piece_type: PieceType, 
-    // Current Position
-    
+    pub piece_type: PieceType,    
 }
 
 fn spawn_black_pieces(
@@ -45,15 +71,18 @@ fn spawn_black_pieces(
             commands.spawn((
                 Sprite::from_image(asset_server.load(names[i - 1])),
                 Transform::from_xyz(x, y, 1.0),
+                Pickable::default(),
+                Movable,
             ))
-                .insert(
-                    Piece { 
-                        color: PieceColor::Black, 
-                        piece_type: types[i - 1] 
-                        // TODO: position variable later
-                });
+            .insert(
+        Piece { 
+                    color: PieceColor::Black, 
+                    piece_type: types[i - 1] 
+            })
+            .observe(Helper::drag::<Pointer<Pressed>>())
+            .observe(Helper::drop::<Pointer<Released>>());
         }
-    }                                
+    }                             
 }
 
 fn spawn_white_pieces(
@@ -73,13 +102,16 @@ fn spawn_white_pieces(
         commands.spawn((
             Sprite::from_image(asset_server.load(names[i - 1])),
             Transform::from_xyz(x, y, 1.0),
+            Pickable::default(),
+            Movable,
         ))
             .insert(
                 Piece{
                     color: PieceColor::White,
                     piece_type: types[i - 1],
-                    // TODO: position variable later
-                }); 
+            })
+            .observe(Helper::drag::<Pointer<Pressed>>())
+            .observe(Helper::drop::<Pointer<Released>>());
         }
     }
 }
@@ -95,13 +127,16 @@ fn spawn_pawns(
             commands.spawn((
                 Sprite::from_image(asset_server.load("white_pawn.png")),
                 Transform::from_xyz(x, y, 1.0),
+                Pickable::default(),
+                Movable,
             ))
                 .insert(
                     Piece{
                         color:PieceColor::White,
                         piece_type: PieceType::Pawn,
-                        // TODO: position variable later
-                });
+                })
+                .observe(Helper::drag::<Pointer<Pressed>>())
+                .observe(Helper::drop::<Pointer<Released>>());
         } 
     }
     
@@ -111,16 +146,30 @@ fn spawn_pawns(
             commands.spawn((
                 Sprite::from_image(asset_server.load("black_pawn.png")),
                 Transform::from_xyz(x, y, 1.0),
+                Pickable::default(),
+                Movable,
             ))
                 .insert(
                     Piece {
                         color: PieceColor::Black,
                         piece_type: PieceType::Pawn,
-                        // TODO: position variable later
-                });
+                })
+                .observe(Helper::drag::<Pointer<Pressed>>())
+                .observe(Helper::drop::<Pointer<Released>>());
         }
     }
 }
+
+fn grab(
+    cursor_pos: Res<MouseWorldCoords>, 
+    piece: Single<&mut Transform, With<Draggable>>
+) {
+    let mut transform = piece.into_inner(); 
+    transform.translation.x = cursor_pos.0.unwrap().x; 
+    transform.translation.y = cursor_pos.0.unwrap().y;
+}
+
+
 
 pub struct PiecesPlugin;
 impl Plugin for PiecesPlugin {
@@ -128,6 +177,7 @@ impl Plugin for PiecesPlugin {
         app
             .add_systems(Startup, spawn_black_pieces.after(setup_placement))
             .add_systems(Startup, spawn_white_pieces.after(setup_placement))
-            .add_systems(Startup, spawn_pawns.after(setup_placement));
+            .add_systems(Startup, spawn_pawns.after(setup_placement))
+            .add_systems(Update, grab.after(update_cursor_pos));
     }
 }
