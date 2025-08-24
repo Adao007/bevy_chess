@@ -15,16 +15,29 @@ impl Helper {
         }
     }
 
-    fn drop<E: Debug + Clone + Reflect>() -> impl Fn(Trigger<E>, Commands, Query<Entity, With<Draggable>>) {
-        move |ev, mut commands, mut sprites| {
+    fn drop<E: Debug + Clone + Reflect>() -> impl Fn(
+        Trigger<E>, 
+        Commands, 
+        Query<(Entity, &mut Piece), With<Draggable>>, 
+        Res<MouseWorldCoords>,
+    ) {
+        move |ev, mut commands, mut sprites, cursor_pos| {
             let Ok(sprite) = sprites.get_mut(ev.target()) else {
                 return;
             };
 
+            let (sprite, mut piece) = sprite; 
+            if let Some(pos) = cursor_pos.0 {
+                piece.position.x = pos.x;
+                piece.position.y = pos.y; 
+            }
+            
             commands.entity(sprite).remove::<Draggable>();
         }
     }
 }
+
+//cursor_pos: Res<MouseWorldCoords>,
 
 #[derive(Component)]
 struct Movable; 
@@ -52,6 +65,7 @@ pub enum PieceType {
 pub struct Piece {
     pub color: PieceColor,
     pub piece_type: PieceType,    
+    pub position: Vec2,
 }
 
 fn spawn_black_pieces(
@@ -77,7 +91,8 @@ fn spawn_black_pieces(
             .insert(
         Piece { 
                     color: PieceColor::Black, 
-                    piece_type: types[i - 1] 
+                    piece_type: types[i - 1],
+                    position: Vec2::new(x, y), 
             })
             .observe(Helper::drag::<Pointer<Pressed>>())
             .observe(Helper::drop::<Pointer<Released>>());
@@ -109,6 +124,7 @@ fn spawn_white_pieces(
                 Piece{
                     color: PieceColor::White,
                     piece_type: types[i - 1],
+                    position: Vec2::new(x, y), 
             })
             .observe(Helper::drag::<Pointer<Pressed>>())
             .observe(Helper::drop::<Pointer<Released>>());
@@ -134,6 +150,7 @@ fn spawn_pawns(
                     Piece{
                         color:PieceColor::White,
                         piece_type: PieceType::Pawn,
+                        position: Vec2::new(x, y), 
                 })
                 .observe(Helper::drag::<Pointer<Pressed>>())
                 .observe(Helper::drop::<Pointer<Released>>());
@@ -153,6 +170,7 @@ fn spawn_pawns(
                     Piece {
                         color: PieceColor::Black,
                         piece_type: PieceType::Pawn,
+                        position: Vec2::new(x, y), 
                 })
                 .observe(Helper::drag::<Pointer<Pressed>>())
                 .observe(Helper::drop::<Pointer<Released>>());
@@ -165,8 +183,10 @@ fn grab(
     piece: Single<&mut Transform, With<Draggable>>
 ) {
     let mut transform = piece.into_inner(); 
-    transform.translation.x = cursor_pos.0.unwrap().x; 
-    transform.translation.y = cursor_pos.0.unwrap().y;
+    if let Some(pos) = cursor_pos.0 {
+        transform.translation.x = pos.x;
+        transform.translation.y = pos.y; 
+    }
 }
 
 pub struct PiecesPlugin;
