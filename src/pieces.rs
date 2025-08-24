@@ -37,8 +37,6 @@ impl Helper {
     }
 }
 
-//cursor_pos: Res<MouseWorldCoords>,
-
 #[derive(Component)]
 struct Movable; 
 
