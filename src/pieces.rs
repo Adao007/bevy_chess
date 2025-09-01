@@ -61,10 +61,17 @@ pub enum PieceType {
 
 #[derive(Clone, Copy, Component)]
 pub struct Piece {
-    pub color: PieceColor,
-    pub piece_type: PieceType,    
     pub position: Vec2,
 }
+
+#[derive(Component)]
+pub struct BlackPiece; 
+
+#[derive(Component)]
+pub struct WhitePiece; 
+
+#[derive(Component)]
+pub struct Pawn; 
 
 fn spawn_black_pieces(
     mut commands: Commands,
@@ -83,13 +90,12 @@ fn spawn_black_pieces(
             commands.spawn((
                 Sprite::from_image(asset_server.load(names[i - 1])),
                 Transform::from_xyz(x, y, 1.0),
+                BlackPiece,
                 Pickable::default(),
                 Movable,
             ))
             .insert(
         Piece { 
-                    color: PieceColor::Black, 
-                    piece_type: types[i - 1],
                     position: Vec2::new(x, y), 
             })
             .observe(Helper::drag::<Pointer<Pressed>>())
@@ -115,13 +121,12 @@ fn spawn_white_pieces(
         commands.spawn((
             Sprite::from_image(asset_server.load(names[i - 1])),
             Transform::from_xyz(x, y, 1.0),
+            WhitePiece,
             Pickable::default(),
             Movable,
         ))
             .insert(
                 Piece{
-                    color: PieceColor::White,
-                    piece_type: types[i - 1],
                     position: Vec2::new(x, y), 
             })
             .observe(Helper::drag::<Pointer<Pressed>>())
@@ -141,13 +146,13 @@ fn spawn_pawns(
             commands.spawn((
                 Sprite::from_image(asset_server.load("white_pawn.png")),
                 Transform::from_xyz(x, y, 1.0),
+                WhitePiece,
+                Pawn,
                 Pickable::default(),
                 Movable,
             ))
                 .insert(
                     Piece{
-                        color:PieceColor::White,
-                        piece_type: PieceType::Pawn,
                         position: Vec2::new(x, y), 
                 })
                 .observe(Helper::drag::<Pointer<Pressed>>())
@@ -161,13 +166,13 @@ fn spawn_pawns(
             commands.spawn((
                 Sprite::from_image(asset_server.load("black_pawn.png")),
                 Transform::from_xyz(x, y, 1.0),
+                BlackPiece,
+                Pawn,
                 Pickable::default(),
                 Movable,
             ))
                 .insert(
                     Piece {
-                        color: PieceColor::Black,
-                        piece_type: PieceType::Pawn,
                         position: Vec2::new(x, y), 
                 })
                 .observe(Helper::drag::<Pointer<Pressed>>())
@@ -187,6 +192,17 @@ fn grab(
     }
 }
 
+fn promote_black(
+    mut pawn_query: Query<(&mut Sprite, &Piece), (With<Pawn>, With<BlackPiece>)>, 
+    asset_server: Res<AssetServer>,
+) {
+    for (mut sprite, piece) in pawn_query.iter_mut() {
+        if piece.position.y <= -300.0 && piece.position.y >= -400.0 {
+            *sprite = Sprite::from_image(asset_server.load("black_queen.png")); 
+        }
+    }
+} 
+
 pub struct PiecesPlugin;
 impl Plugin for PiecesPlugin {
     fn build(&self, app: &mut App) {
@@ -194,6 +210,7 @@ impl Plugin for PiecesPlugin {
             .add_systems(Startup, spawn_black_pieces.after(setup_placement))
             .add_systems(Startup, spawn_white_pieces.after(setup_placement))
             .add_systems(Startup, spawn_pawns.after(setup_placement))
-            .add_systems(Update, grab.after(update_cursor_pos));
+            .add_systems(Update, grab.after(update_cursor_pos))
+            .add_systems(Update, promote_black);
     }
 }
