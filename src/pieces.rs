@@ -193,15 +193,62 @@ fn grab(
 }
 
 fn promote_black(
-    mut pawn_query: Query<(&mut Sprite, &Piece), (With<Pawn>, With<BlackPiece>)>, 
+    mut commands: Commands,
+    mut pawn_query: Query<(Entity, &mut Sprite, &Piece), (With<Pawn>, With<BlackPiece>)>, 
     asset_server: Res<AssetServer>,
+    keys: Res<ButtonInput<KeyCode>>, 
 ) {
-    for (mut sprite, piece) in pawn_query.iter_mut() {
+    for (entity, mut sprite, piece) in pawn_query.iter_mut() {
         if piece.position.y <= -300.0 && piece.position.y >= -400.0 {
-            *sprite = Sprite::from_image(asset_server.load("black_queen.png")); 
+            //*sprite = Sprite::from_image(asset_server.load("black_queen.png")); 
+            if keys.just_released(KeyCode::KeyQ) {
+                *sprite = Sprite::from_image(asset_server.load("black_queen.png")); 
+                commands.entity(entity).remove::<Pawn>();
+            }
+            if keys.just_released(KeyCode::KeyR) {
+                *sprite = Sprite::from_image(asset_server.load("black_rook.png")); 
+                commands.entity(entity).remove::<Pawn>();
+            }
+            if keys.just_released(KeyCode::KeyK) {
+                *sprite = Sprite::from_image(asset_server.load("black_knight.png")); 
+                commands.entity(entity).remove::<Pawn>();
+            }
+            if keys.just_released(KeyCode::KeyB) {
+                *sprite = Sprite::from_image(asset_server.load("black_bishop.png"));
+                commands.entity(entity).remove::<Pawn>();
+            }
+            
         }
     }
 } 
+
+fn promote_white(
+    mut commands: Commands,
+    mut pawn_query: Query<(Entity, &mut Sprite, &Piece), (With<Pawn>, With<WhitePiece>)>, 
+    asset_server: Res<AssetServer>, 
+    keys: Res<ButtonInput<KeyCode>>, 
+) {
+    for (entity, mut sprite, piece) in pawn_query.iter_mut() {
+        if piece.position.y >= 300.0 && piece.position.y <= 400.0 {
+            if keys.just_released(KeyCode::KeyQ) {
+                *sprite = Sprite::from_image(asset_server.load("white_queen.png")); 
+                commands.entity(entity).remove::<Pawn>(); 
+            }
+            if keys.just_released(KeyCode::KeyB) {
+                *sprite = Sprite::from_image(asset_server.load("white_bishop.png")); 
+                commands.entity(entity).remove::<Pawn>(); 
+            }
+            if keys.just_released(KeyCode::KeyK) {
+                *sprite = Sprite::from_image(asset_server.load("white_knight.png")); 
+                commands.entity(entity).remove::<Pawn>(); 
+            }
+            if keys.just_released(KeyCode::KeyR) {
+                *sprite = Sprite::from_image(asset_server.load("white_rook.png")); 
+                commands.entity(entity).remove::<Pawn>(); 
+            }
+        }
+    }
+}
 
 pub struct PiecesPlugin;
 impl Plugin for PiecesPlugin {
@@ -211,6 +258,7 @@ impl Plugin for PiecesPlugin {
             .add_systems(Startup, spawn_white_pieces.after(setup_placement))
             .add_systems(Startup, spawn_pawns.after(setup_placement))
             .add_systems(Update, grab.after(update_cursor_pos))
-            .add_systems(Update, promote_black);
+            .add_systems(Update, promote_black)
+            .add_systems(Update, promote_white); 
     }
 }
