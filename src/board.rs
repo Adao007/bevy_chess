@@ -18,8 +18,8 @@ fn startup(
     commands.spawn((Camera2d, MainCamera));
 
     let image_handles = vec![
-        asset_server.load("small_ns.png"),
-        asset_server.load("small_gs.png"),
+        asset_server.load("dirt.png"),
+        asset_server.load("grass.png"),
     ];
     let texture_vec = TilemapTexture::Vector(image_handles);
 

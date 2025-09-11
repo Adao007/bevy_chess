@@ -3,7 +3,25 @@ use std::collections::HashMap;
 
 type BoardPosition = String; 
 type Coordinates = (f32, f32); 
-const START_POS: f32 = -350.0;
+pub const START_POS: f32 = -350.0;
+const WHITE_CAPTURE_POS: f32 = 500.0;
+const BLACK_CAPTURE_POS: f32 = -500.0; 
+
+#[derive(Resource)]
+pub struct CaptureZones {
+    pub white_pos: Vec2,
+    pub black_pos: Vec2,
+}
+
+pub fn setup_cages(mut commands: Commands) {
+    let w_coordinates = Vec2::new(START_POS, WHITE_CAPTURE_POS); 
+    let b_coordinates: Vec2 = Vec2::new(START_POS, BLACK_CAPTURE_POS); 
+    commands.insert_resource( CaptureZones {
+        white_pos: w_coordinates,
+        black_pos: b_coordinates,
+    }); 
+
+}
 
 #[derive(Resource)]
 pub struct Placement {
@@ -32,6 +50,6 @@ pub struct PositionPlugin;
 impl Plugin for PositionPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Startup, setup_placement);
+            .add_systems(Startup, (setup_placement, setup_cages).chain());
     }
 }

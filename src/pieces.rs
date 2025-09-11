@@ -1,11 +1,36 @@
 use bevy::prelude::*;
+use bevy::math::bounding::{Aabb2d, IntersectsVolume};
 use std::fmt::Debug;
 use super::position::*;
 use super::cursor::*;
 
+const PIECESIZE: f32 = 37.5;
+const MOVEOVER: f32 = 40.0; 
+const RESET_LIMIT: f32 = -40.0; 
+const SCALER: f32 = 0.40; 
+
+pub struct PiecesPlugin;
+impl Plugin for PiecesPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_systems
+                (Startup, 
+            (spawn_black_pieces, spawn_white_pieces, spawn_pawns).chain()
+                    .after(setup_placement))
+            .add_systems(Update, promote_black)
+            .add_systems(Update, promote_white)
+            .add_systems(Update, grab.after(update_cursor_pos))
+            .add_systems(Update, (take_white, take_black));
+    }
+}
+
 struct Helper; 
 impl Helper {
-    fn drag<E: Debug + Clone + Reflect>() -> impl Fn(Trigger<E>, Commands, Query<Entity, With<Pickable>>) {
+    fn drag<E: Debug + Clone + Reflect>() -> impl Fn(
+        Trigger<E>, 
+        Commands, 
+        Query<Entity, With<Pickable>>
+    ) {
         move |ev, mut commands, mut sprites| {
             let Ok(sprite) = sprites.get_mut(ev.target()) else {
                 return; 
@@ -18,7 +43,7 @@ impl Helper {
     fn drop<E: Debug + Clone + Reflect>() -> impl Fn(
         Trigger<E>, 
         Commands, 
-        Query<(Entity, &mut Piece), With<Draggable>>, 
+        Query<Entity, With<Draggable>>, 
         Res<MouseWorldCoords>,
     ) {
         move |ev, mut commands, mut sprites, cursor_pos| {
@@ -26,15 +51,11 @@ impl Helper {
                 return;
             };
 
-            let (sprite, mut piece) = sprite; 
-            if let Some(pos) = cursor_pos.0 {
-                piece.position.x = pos.x;
-                piece.position.y = pos.y; 
-            }
-            
             commands.entity(sprite).remove::<Draggable>();
+            commands.entity(sprite).insert(Dropped); 
         }
     }
+
 }
 
 #[derive(Component)]
@@ -43,11 +64,8 @@ struct Movable;
 #[derive(Component)]
 struct Draggable; 
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum PieceColor {
-    White, 
-    Black,
-}
+#[derive(Component)]
+struct Dropped;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum PieceType {
@@ -56,12 +74,6 @@ pub enum PieceType {
     Bishop, 
     Knight,
     Rook,
-    Pawn,
-}
-
-#[derive(Clone, Copy, Component)]
-pub struct Piece {
-    pub position: Vec2,
 }
 
 #[derive(Component)]
@@ -94,10 +106,6 @@ fn spawn_black_pieces(
                 Pickable::default(),
                 Movable,
             ))
-            .insert(
-        Piece { 
-                    position: Vec2::new(x, y), 
-            })
             .observe(Helper::drag::<Pointer<Pressed>>())
             .observe(Helper::drop::<Pointer<Released>>());
         }
@@ -125,10 +133,6 @@ fn spawn_white_pieces(
             Pickable::default(),
             Movable,
         ))
-            .insert(
-                Piece{
-                    position: Vec2::new(x, y), 
-            })
             .observe(Helper::drag::<Pointer<Pressed>>())
             .observe(Helper::drop::<Pointer<Released>>());
         }
@@ -151,10 +155,6 @@ fn spawn_pawns(
                 Pickable::default(),
                 Movable,
             ))
-                .insert(
-                    Piece{
-                        position: Vec2::new(x, y), 
-                })
                 .observe(Helper::drag::<Pointer<Pressed>>())
                 .observe(Helper::drop::<Pointer<Released>>());
         } 
@@ -171,10 +171,6 @@ fn spawn_pawns(
                 Pickable::default(),
                 Movable,
             ))
-                .insert(
-                    Piece {
-                        position: Vec2::new(x, y), 
-                })
                 .observe(Helper::drag::<Pointer<Pressed>>())
                 .observe(Helper::drop::<Pointer<Released>>());
         }
@@ -194,12 +190,13 @@ fn grab(
 
 fn promote_black(
     mut commands: Commands,
-    mut pawn_query: Query<(Entity, &mut Sprite, &Piece), (With<Pawn>, With<BlackPiece>)>, 
+    mut pawn_query: Query<(Entity, &mut Sprite, &Transform), (With<Pawn>, With<BlackPiece>)>, 
     asset_server: Res<AssetServer>,
     keys: Res<ButtonInput<KeyCode>>, 
 ) {
     for (entity, mut sprite, piece) in pawn_query.iter_mut() {
-        if piece.position.y <= -300.0 && piece.position.y >= -400.0 {
+        if (piece.translation.y <= -300.0 && piece.translation.y >= -400.0) &&
+           (piece.translation.x <= 400.0 && piece.translation.x >= -400.0) {
             //*sprite = Sprite::from_image(asset_server.load("black_queen.png")); 
             if keys.just_released(KeyCode::KeyQ) {
                 *sprite = Sprite::from_image(asset_server.load("black_queen.png")); 
@@ -224,12 +221,13 @@ fn promote_black(
 
 fn promote_white(
     mut commands: Commands,
-    mut pawn_query: Query<(Entity, &mut Sprite, &Piece), (With<Pawn>, With<WhitePiece>)>, 
+    mut pawn_query: Query<(Entity, &mut Sprite, &Transform), (With<Pawn>, With<WhitePiece>)>, 
     asset_server: Res<AssetServer>, 
     keys: Res<ButtonInput<KeyCode>>, 
 ) {
     for (entity, mut sprite, piece) in pawn_query.iter_mut() {
-        if piece.position.y >= 300.0 && piece.position.y <= 400.0 {
+        if (piece.translation.y >= 300.0 && piece.translation.y <= 400.0) &&
+           (piece.translation.x <= 400.0 && piece.translation.x >= -400.0){
             if keys.just_released(KeyCode::KeyQ) {
                 *sprite = Sprite::from_image(asset_server.load("white_queen.png")); 
                 commands.entity(entity).remove::<Pawn>(); 
@@ -250,15 +248,91 @@ fn promote_white(
     }
 }
 
-pub struct PiecesPlugin;
-impl Plugin for PiecesPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .add_systems(Startup, spawn_black_pieces.after(setup_placement))
-            .add_systems(Startup, spawn_white_pieces.after(setup_placement))
-            .add_systems(Startup, spawn_pawns.after(setup_placement))
-            .add_systems(Update, grab.after(update_cursor_pos))
-            .add_systems(Update, promote_black)
-            .add_systems(Update, promote_white); 
+fn take_white(
+   taken_query: Query<(Entity, &mut Transform),  (With<WhitePiece>, Without<Draggable>)>,
+   captor_query: Single<&Transform, (With<Draggable>, With<BlackPiece>)>, 
+   mut commands: Commands,
+   mouse: Res<ButtonInput<KeyCode>>,
+   mut removal: ResMut<CaptureZones>,
+) {
+    let capture = captor_query.into_inner(); 
+    for (piece, mut taken) in taken_query.into_iter() {
+        let collision = check_for_collisions(
+            Aabb2d::new(
+                taken.translation.truncate(),
+                Vec2::new(PIECESIZE, PIECESIZE),
+            ),
+            Aabb2d::new(
+                capture.translation.truncate(),
+                Vec2::new(PIECESIZE, PIECESIZE),
+            )
+        ); 
+
+        if collision {
+            if mouse.just_pressed(KeyCode::KeyX) {
+                if removal.white_pos.x > RESET_LIMIT {
+                    removal.white_pos.y += MOVEOVER; 
+                    removal.white_pos.x = START_POS;
+                }
+                taken.translation.x = removal.white_pos.x; 
+                taken.translation.y = removal.white_pos.y; 
+                taken.scale.x = SCALER; 
+                taken.scale.y = SCALER; 
+                commands.entity(piece).remove::<Pickable>();
+                
+                removal.white_pos.x += MOVEOVER;
+            }
+        }
+    }
+}
+
+fn take_black(
+    taken_query: Query<(Entity, &mut Transform), (With<BlackPiece>, Without<Draggable>)>,
+    captor_query: Single<&Transform, (With<Draggable>, With<WhitePiece>)>, 
+    mut commands: Commands,
+    key: Res<ButtonInput<KeyCode>>, 
+    mut removal: ResMut<CaptureZones>,
+) {
+    let capture = captor_query.into_inner(); 
+    for (piece, mut taken) in taken_query.into_iter() {
+        let collision = check_for_collisions(
+            Aabb2d::new(    
+                taken.translation.truncate(),
+                Vec2::new(PIECESIZE, PIECESIZE),
+            ),
+            Aabb2d::new(
+                capture.translation.truncate(),
+                Vec2::new(PIECESIZE, PIECESIZE),
+            )
+        ); 
+
+        if collision {
+            if key.just_pressed(KeyCode::KeyX) {
+                if removal.black_pos.x > RESET_LIMIT {
+                    removal.black_pos.y -= MOVEOVER; 
+                    removal.black_pos.x = START_POS;
+                }
+                // Moving pieces off board
+                taken.translation.x = removal.black_pos.x; 
+                taken.translation.y = removal.black_pos.y; 
+                taken.scale.x = SCALER; 
+                taken.scale.y = SCALER; 
+                commands.entity(piece).remove::<Pickable>();
+                
+                removal.black_pos.x += MOVEOVER;
+            }
+        }
+    }
+}
+
+fn check_for_collisions(
+    taken: Aabb2d,
+    captor: Aabb2d,
+) -> bool {
+    if captor.intersects(&taken) {
+        true
+    }
+    else {
+        false
     }
 }
