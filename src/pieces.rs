@@ -1,13 +1,6 @@
 use bevy::prelude::*;
-use bevy::math::bounding::{Aabb2d, IntersectsVolume};
 use std::fmt::Debug;
 use super::position::*;
-use super::cursor::*;
-
-const PIECESIZE: f32 = 37.5;
-const MOVEOVER: f32 = 40.0; 
-const RESET_LIMIT: f32 = -450.0; 
-const SCALER: f32 = 0.40; 
 
 pub struct PiecesPlugin;
 impl Plugin for PiecesPlugin {
@@ -18,54 +11,10 @@ impl Plugin for PiecesPlugin {
             (spawn_black_pieces, spawn_white_pieces, spawn_pawns).chain()
                     .after(setup_placement))
             .add_systems(Update, promote_black)
-            .add_systems(Update, promote_white)
-            .add_systems(Update, grab.after(update_cursor_pos))
-            .add_systems(Update, (take_white, take_black));
+            .add_systems(Update, promote_white);
     }
 }
 
-struct Helper; 
-impl Helper {
-    fn drag<E: Debug + Clone + Reflect>() -> impl Fn(
-        Trigger<E>, 
-        Commands, 
-        Query<Entity, With<Pickable>>
-    ) {
-        move |ev, mut commands, mut sprites| {
-            let Ok(sprite) = sprites.get_mut(ev.target()) else {
-                return; 
-            }; 
-
-            commands.entity(sprite).insert(Draggable);
-        }
-    }
-
-    fn drop<E: Debug + Clone + Reflect>() -> impl Fn(
-        Trigger<E>, 
-        Commands, 
-        Query<Entity, With<Draggable>>, 
-        Res<MouseWorldCoords>,
-    ) {
-        move |ev, mut commands, mut sprites, cursor_pos| {
-            let Ok(sprite) = sprites.get_mut(ev.target()) else {
-                return;
-            };
-
-            commands.entity(sprite).remove::<Draggable>();
-            commands.entity(sprite).insert(Dropped); 
-        }
-    }
-
-}
-
-#[derive(Component)]
-struct Movable; 
-
-#[derive(Component)]
-struct Draggable; 
-
-#[derive(Component)]
-struct Dropped;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum PieceType {
@@ -84,6 +33,9 @@ pub struct WhitePiece;
 
 #[derive(Component)]
 pub struct Pawn; 
+
+#[derive(Component)]
+pub struct Movable; 
 
 fn spawn_black_pieces(
     mut commands: Commands,
@@ -105,9 +57,7 @@ fn spawn_black_pieces(
                 BlackPiece,
                 Pickable::default(),
                 Movable,
-            ))
-            .observe(Helper::drag::<Pointer<Pressed>>())
-            .observe(Helper::drop::<Pointer<Released>>());
+            ));
         }
     }                             
 }
@@ -132,9 +82,7 @@ fn spawn_white_pieces(
             WhitePiece,
             Pickable::default(),
             Movable,
-        ))
-            .observe(Helper::drag::<Pointer<Pressed>>())
-            .observe(Helper::drop::<Pointer<Released>>());
+        ));
         }
     }
 }
@@ -154,9 +102,7 @@ fn spawn_pawns(
                 Pawn,
                 Pickable::default(),
                 Movable,
-            ))
-                .observe(Helper::drag::<Pointer<Pressed>>())
-                .observe(Helper::drop::<Pointer<Released>>());
+            ));
         } 
     }
     
@@ -170,21 +116,8 @@ fn spawn_pawns(
                 Pawn,
                 Pickable::default(),
                 Movable,
-            ))
-                .observe(Helper::drag::<Pointer<Pressed>>())
-                .observe(Helper::drop::<Pointer<Released>>());
+            ));
         }
-    }
-}
-
-fn grab(
-    cursor_pos: Res<MouseWorldCoords>, 
-    piece: Single<&mut Transform, With<Draggable>>
-) {
-    let mut transform = piece.into_inner(); 
-    if let Some(pos) = cursor_pos.0 {
-        transform.translation.x = pos.x;
-        transform.translation.y = pos.y; 
     }
 }
 
@@ -248,91 +181,3 @@ fn promote_white(
     }
 }
 
-fn take_white(
-   taken_query: Query<(Entity, &mut Transform),  (With<WhitePiece>, Without<Draggable>)>,
-   captor_query: Single<&Transform, (With<Draggable>, With<BlackPiece>)>, 
-   mut commands: Commands,
-   mouse: Res<ButtonInput<KeyCode>>,
-   mut removal: ResMut<CaptureZones>,
-) {
-    let capture = captor_query.into_inner(); 
-    for (piece, mut taken) in taken_query.into_iter() {
-        let collision = check_for_collisions(
-            Aabb2d::new(
-                taken.translation.truncate(),
-                Vec2::new(PIECESIZE, PIECESIZE),
-            ),
-            Aabb2d::new(
-                capture.translation.truncate(),
-                Vec2::new(PIECESIZE, PIECESIZE),
-            )
-        ); 
-
-        if collision {
-            if mouse.just_pressed(KeyCode::KeyX) {
-                if removal.white_pos.x > RESET_LIMIT {
-                    removal.white_pos.y -= MOVEOVER; 
-                    removal.white_pos.x = CAPTURE_START;
-                }
-                taken.translation.x = removal.white_pos.x; 
-                taken.translation.y = removal.white_pos.y; 
-                taken.scale.x = SCALER; 
-                taken.scale.y = SCALER; 
-                commands.entity(piece).remove::<Pickable>();
-                
-                removal.white_pos.x += MOVEOVER;
-            }
-        }
-    }
-}
-
-fn take_black(
-    taken_query: Query<(Entity, &mut Transform), (With<BlackPiece>, Without<Draggable>)>,
-    captor_query: Single<&Transform, (With<Draggable>, With<WhitePiece>)>, 
-    mut commands: Commands,
-    key: Res<ButtonInput<KeyCode>>, 
-    mut removal: ResMut<CaptureZones>,
-) {
-    let capture = captor_query.into_inner(); 
-    for (piece, mut taken) in taken_query.into_iter() {
-        let collision = check_for_collisions(
-            Aabb2d::new(    
-                taken.translation.truncate(),
-                Vec2::new(PIECESIZE, PIECESIZE),
-            ),
-            Aabb2d::new(
-                capture.translation.truncate(),
-                Vec2::new(PIECESIZE, PIECESIZE),
-            )
-        ); 
-
-        if collision {
-            if key.just_pressed(KeyCode::KeyX) {
-                if removal.black_pos.x > RESET_LIMIT {
-                    removal.black_pos.y -= MOVEOVER; 
-                    removal.black_pos.x = CAPTURE_START;
-                }
-                // Moving pieces off board
-                taken.translation.x = removal.black_pos.x; 
-                taken.translation.y = removal.black_pos.y; 
-                taken.scale.x = SCALER; 
-                taken.scale.y = SCALER; 
-                commands.entity(piece).remove::<Pickable>();
-                
-                removal.black_pos.x += MOVEOVER;
-            }
-        }
-    }
-}
-
-fn check_for_collisions(
-    taken: Aabb2d,
-    captor: Aabb2d,
-) -> bool {
-    if captor.intersects(&taken) {
-        true
-    }
-    else {
-        false
-    }
-}
