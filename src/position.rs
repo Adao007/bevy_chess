@@ -4,8 +4,9 @@ use std::collections::HashMap;
 type BoardPosition = String; 
 type Coordinates = (f32, f32); 
 pub const START_POS: f32 = -350.0;
-const WHITE_CAPTURE_POS: f32 = 500.0;
-const BLACK_CAPTURE_POS: f32 = -500.0; 
+pub const CAPTURE_START: f32 = -600.0;
+const WHITE_CAPTURE_POS: f32 = 350.0;
+const BLACK_CAPTURE_POS: f32 = -250.0; 
 
 #[derive(Resource)]
 pub struct CaptureZones {
@@ -14,8 +15,8 @@ pub struct CaptureZones {
 }
 
 pub fn setup_cages(mut commands: Commands) {
-    let w_coordinates = Vec2::new(START_POS, WHITE_CAPTURE_POS); 
-    let b_coordinates: Vec2 = Vec2::new(START_POS, BLACK_CAPTURE_POS); 
+    let w_coordinates = Vec2::new(CAPTURE_START, WHITE_CAPTURE_POS); 
+    let b_coordinates: Vec2 = Vec2::new(CAPTURE_START, BLACK_CAPTURE_POS); 
     commands.insert_resource( CaptureZones {
         white_pos: w_coordinates,
         black_pos: b_coordinates,

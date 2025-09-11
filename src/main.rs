@@ -3,16 +3,12 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
-mod window;
-use window::WindowsPlugin;
-mod board;
-use board::BoardPlugin;
-mod cursor;
-use cursor::CursorPlugin;
-mod pieces;
-use pieces::PiecesPlugin;
-mod position;
-use position::PositionPlugin;
+mod window; use window::WindowsPlugin;
+mod board; use board::BoardPlugin;
+mod cursor; use cursor::CursorPlugin;
+mod pieces; use pieces::PiecesPlugin;
+mod position; use position::PositionPlugin;
+mod gameplay; use gameplay::GameplayPlugin; 
 
 fn main() {
     App::new()
@@ -23,6 +19,7 @@ fn main() {
             PositionPlugin,
             CursorPlugin,
             PiecesPlugin,
+            GameplayPlugin,
         ))
         .add_plugins(TilemapPlugin)
         .run();

@@ -6,7 +6,7 @@ use super::cursor::*;
 
 const PIECESIZE: f32 = 37.5;
 const MOVEOVER: f32 = 40.0; 
-const RESET_LIMIT: f32 = -40.0; 
+const RESET_LIMIT: f32 = -450.0; 
 const SCALER: f32 = 0.40; 
 
 pub struct PiecesPlugin;
@@ -271,8 +271,8 @@ fn take_white(
         if collision {
             if mouse.just_pressed(KeyCode::KeyX) {
                 if removal.white_pos.x > RESET_LIMIT {
-                    removal.white_pos.y += MOVEOVER; 
-                    removal.white_pos.x = START_POS;
+                    removal.white_pos.y -= MOVEOVER; 
+                    removal.white_pos.x = CAPTURE_START;
                 }
                 taken.translation.x = removal.white_pos.x; 
                 taken.translation.y = removal.white_pos.y; 
@@ -310,7 +310,7 @@ fn take_black(
             if key.just_pressed(KeyCode::KeyX) {
                 if removal.black_pos.x > RESET_LIMIT {
                     removal.black_pos.y -= MOVEOVER; 
-                    removal.black_pos.x = START_POS;
+                    removal.black_pos.x = CAPTURE_START;
                 }
                 // Moving pieces off board
                 taken.translation.x = removal.black_pos.x; 
