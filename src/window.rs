@@ -1,4 +1,5 @@
 use bevy::prelude::*; 
+use bevy::window::{PrimaryWindow, Window, WindowMode}; 
 
 pub struct WindowsPlugin; 
 impl Plugin for WindowsPlugin {
@@ -9,6 +10,7 @@ impl Plugin for WindowsPlugin {
                 medium: Vec2::new(1600.0, 1080.0),
                 small: Vec2::new(1040.0, 1080.0),
             })
+            .add_systems(Startup, set_fullscreen)
             .add_systems(Update, toggle_resolution); 
     }
 }
@@ -18,6 +20,15 @@ pub struct ResolutionSettings{
     large: Vec2,
     medium: Vec2,
     small: Vec2, 
+}
+
+fn set_fullscreen(
+    mut window_query: Query<&mut Window, With<PrimaryWindow>>
+) {
+    for mut window in window_query.iter_mut() {
+        window.mode = 
+            WindowMode::BorderlessFullscreen(MonitorSelection::Primary);
+    }
 }
 
 fn toggle_resolution(

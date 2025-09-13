@@ -144,8 +144,7 @@ fn take_black(
     }
 }
 
-fn illegal_black_mv(
-    mut commands: Commands, 
+fn illegal_black_mv( 
     previous: Res<Previous>, 
     friendly_query: Query<&Transform, (With<BlackPiece>, Without<Dropped>)>, 
     captor_query: Single<&mut Transform, (With<BlackPiece>, With<Dropped>)>, 
@@ -167,7 +166,6 @@ fn illegal_black_mv(
 }
 
 fn illegal_white_mv(
-    mut commands: Commands, 
     previous: Res<Previous>, 
     friendly_query: Query<&Transform, (With<WhitePiece>, Without<Dropped>)>, 
     captor_query: Single<&mut Transform, (With<WhitePiece>, With<Dropped>)>, 

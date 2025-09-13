@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use std::fmt::Debug;
 use super::position::*;
 
 pub struct PiecesPlugin;

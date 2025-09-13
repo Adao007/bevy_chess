@@ -2,6 +2,7 @@
 
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
+use bevy::window::WindowMode;
 
 mod window; use window::WindowsPlugin;
 mod board; use board::BoardPlugin;
