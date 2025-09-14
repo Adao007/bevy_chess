@@ -11,7 +11,7 @@ impl Plugin for WindowsPlugin {
                 small: Vec2::new(1040.0, 1080.0),
             })
             .add_systems(Startup, set_fullscreen)
-            .add_systems(Update, toggle_resolution); 
+            .add_systems(Update, (set_app_window, toggle_resolution)); 
     }
 }
 
@@ -28,6 +28,25 @@ fn set_fullscreen(
     for mut window in window_query.iter_mut() {
         window.mode = 
             WindowMode::BorderlessFullscreen(MonitorSelection::Primary);
+    }
+}
+
+fn set_app_window(
+    mut window_query: Query<&mut Window, With<PrimaryWindow>>, 
+    keys: Res<ButtonInput<KeyCode>>,
+) {
+    if keys.just_pressed(KeyCode::Digit4) {
+        for mut window in window_query.iter_mut() {
+            window.mode = 
+                WindowMode::Windowed; 
+        }
+    }
+
+    if keys.just_pressed(KeyCode::Digit5) {
+        for mut window in window_query.iter_mut() {
+            window.mode = 
+                WindowMode::BorderlessFullscreen(MonitorSelection::Primary); 
+        }
     }
 }
 

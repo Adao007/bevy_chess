@@ -39,6 +39,7 @@ fn drag(
     if let Some(pos) = cursor_pos.0 {
         transform.translation.x = pos.x;
         transform.translation.y = pos.y; 
+        transform.translation.z += 1.0; 
     }
 }
 
@@ -71,11 +72,12 @@ fn grab(
 
 fn drop(
     mut commands: Commands, 
-    dragging_query: Single<Entity, With<Draggable>>,
+    dragging_query: Single<(Entity, &mut Transform), With<Draggable>>,
     mouse: Res<ButtonInput<MouseButton>>,
 ) {
-    let piece = dragging_query.into_inner(); 
+    let (piece, mut transform) = dragging_query.into_inner(); 
     if mouse.just_released(MouseButton::Left) {
+        transform.translation.z -= 1.0; 
         commands.entity(piece).remove::<Draggable>();
         commands.entity(piece).insert(Dropped);
     }
