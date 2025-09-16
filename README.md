@@ -10,7 +10,7 @@ Turns:
 Reset Button: 
     - Make a reset button that can reset the board. - { }
 Player Names: 
-    - Insert player titles for both sides. (Keep near capture zones.) - { }
+    - Insert player titles for both sides. (Keep near capture zones.) - { x }
 Tutorial:
     - Make tutorial/help menu for learning players? - { }
 Rule-enabled Chess:
