@@ -9,6 +9,7 @@ mod cursor; use cursor::CursorPlugin;
 mod pieces; use pieces::PiecesPlugin;
 mod position; use position::PositionPlugin;
 mod gameplay; use gameplay::GameplayPlugin; 
+mod reset; use reset::ResetPlugin; 
 
 fn main() {
     App::new()
