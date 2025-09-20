@@ -7,8 +7,8 @@ pub const START_POS: f32 = -350.0;
 pub const CAPTURE_START: f32 = -600.0;
 const WHITE_CAPTURE_POS: f32 = 350.0;
 const BLACK_CAPTURE_POS: f32 = -250.0; 
-const WHITE_PLAYER_POS: f32 = 450.0; 
-const BLACK_PLAYER_POS: f32 = -150.0; 
+const WHITE_PLAYER_POS: f32 = -150.0; 
+const BLACK_PLAYER_POS: f32 = 450.0; 
 
 #[derive(Resource)]
 pub struct CaptureZones {

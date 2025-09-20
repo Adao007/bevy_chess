@@ -46,12 +46,12 @@ fn spawn_pieces(
 
 
 pub fn spawn_black_pieces(
-    mut commands: &mut Commands,
+    commands: &mut Commands,
     asset_server: &Res<AssetServer>,
     board: &Res<Placement>,
 ) {
     let names = vec!["black_rook.png", "black_knight.png", "black_bishop.png",
-                                        "nature_queen.png", "black_king.png", "black_bishop.png",
+                                        "black_queen.png", "black_king.png", "black_bishop.png",
                                         "black_knight.png", "black_rook.png"];
     let types = vec![PieceType::Rook, PieceType::Knight, PieceType::Bishop,
                                     PieceType::King, PieceType::Queen, PieceType::Bishop,
@@ -71,7 +71,7 @@ pub fn spawn_black_pieces(
 }
 
 pub fn spawn_white_pieces(
-    mut commands: &mut Commands, 
+    commands: &mut Commands, 
     asset_server: &Res<AssetServer>,
     board: &Res<Placement>,
 ) {
@@ -96,7 +96,7 @@ pub fn spawn_white_pieces(
 }
 
 pub fn spawn_pawns(
-    mut commands: &mut Commands,
+    commands: &mut Commands,
     asset_server: &Res<AssetServer>,
     board: &Res<Placement>,
 ) {
