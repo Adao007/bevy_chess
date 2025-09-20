@@ -21,6 +21,7 @@ fn main() {
             CursorPlugin,
             PiecesPlugin,
             GameplayPlugin,
+            ResetPlugin, 
         ))
         .add_plugins(TilemapPlugin)
         .run();

@@ -6,9 +6,7 @@ impl Plugin for PiecesPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems
-                (Startup, 
-            (spawn_black_pieces, spawn_white_pieces, spawn_pawns).chain()
-                    .after(setup_placement))
+                (Startup, spawn_pieces.after(setup_placement))
             .add_systems(Update, promote_black)
             .add_systems(Update, promote_white);
     }
@@ -36,10 +34,21 @@ pub struct Pawn;
 #[derive(Component)]
 pub struct Movable; 
 
-fn spawn_black_pieces(
-    mut commands: Commands,
+fn spawn_pieces(
+    mut commands: Commands, 
     asset_server: Res<AssetServer>,
     board: Res<Placement>,
+) {
+    spawn_white_pieces(&mut commands, &asset_server, &board);
+    spawn_pawns(&mut commands, &asset_server, &board);
+    spawn_black_pieces(&mut commands, &asset_server, &board);
+}
+
+
+pub fn spawn_black_pieces(
+    mut commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    board: &Res<Placement>,
 ) {
     let names = vec!["black_rook.png", "black_knight.png", "black_bishop.png",
                                         "nature_queen.png", "black_king.png", "black_bishop.png",
@@ -61,10 +70,10 @@ fn spawn_black_pieces(
     }                             
 }
 
-fn spawn_white_pieces(
-    mut commands: Commands, 
-    asset_server: Res<AssetServer>,
-    board: Res<Placement>,
+pub fn spawn_white_pieces(
+    mut commands: &mut Commands, 
+    asset_server: &Res<AssetServer>,
+    board: &Res<Placement>,
 ) {
     let names = vec!["white_rook.png", "white_knight.png", "white_bishop.png", 
                                         "white_queen.png", "white_king.png", "white_bishop.png",
@@ -86,10 +95,10 @@ fn spawn_white_pieces(
     }
 }
 
-fn spawn_pawns(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    board: Res<Placement>,
+pub fn spawn_pawns(
+    mut commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    board: &Res<Placement>,
 ) {
     // Spawning the White Pawns
     for i in 1..=8 {
