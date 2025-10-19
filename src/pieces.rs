@@ -4,14 +4,14 @@ use bevy::prelude::*;
 // Edit piece png(s) here
 
 // Black Pieces PNG
-const BLACK_PAWN_IMAGE: &str = "black_pawn.png";
+const BLACK_PAWN_IMAGE: &str = "clove.png";
 const BLACK_ROOK_IMAGE: &str = "black_rook.png";
 const BLACK_KNIGHT_IMAGE: &str = "black_knight.png";
 const BLACK_BISHOP_IMAGE: &str = "black_bishop.png";
 const BLACK_QUEEN_IMAGE: &str = "black_queen.png";
 const BLACK_KING_IMAGE: &str = "black_king.png";
 // White Pieces PNG
-const WHITE_PAWN_IMAGE: &str = "white_pawn.png";
+const WHITE_PAWN_IMAGE: &str = "caterpillar.png";
 const WHITE_ROOK_IMAGE: &str = "white_rook.png";
 const WHITE_KNIGHT_IMAGE: &str = "white_knight.png";
 const WHITE_BISHOP_IMAGE: &str = "ladybug.png";
@@ -178,19 +178,19 @@ fn promote_black(
         {
             //*sprite = Sprite::from_image(asset_server.load("black_queen.png"));
             if keys.just_released(KeyCode::KeyQ) {
-                *sprite = Sprite::from_image(asset_server.load("black_queen.png"));
+                *sprite = Sprite::from_image(asset_server.load(BLACK_QUEEN_IMAGE));
                 commands.entity(entity).remove::<Pawn>();
             }
             if keys.just_released(KeyCode::KeyR) {
-                *sprite = Sprite::from_image(asset_server.load("black_rook.png"));
+                *sprite = Sprite::from_image(asset_server.load(BLACK_ROOK_IMAGE));
                 commands.entity(entity).remove::<Pawn>();
             }
             if keys.just_released(KeyCode::KeyK) {
-                *sprite = Sprite::from_image(asset_server.load("black_knight.png"));
+                *sprite = Sprite::from_image(asset_server.load(BLACK_KNIGHT_IMAGE));
                 commands.entity(entity).remove::<Pawn>();
             }
             if keys.just_released(KeyCode::KeyB) {
-                *sprite = Sprite::from_image(asset_server.load("black_bishop.png"));
+                *sprite = Sprite::from_image(asset_server.load(BLACK_BISHOP_IMAGE));
                 commands.entity(entity).remove::<Pawn>();
             }
         }
@@ -208,19 +208,19 @@ fn promote_white(
             && (piece.translation.x <= 400.0 && piece.translation.x >= -400.0)
         {
             if keys.just_released(KeyCode::KeyQ) {
-                *sprite = Sprite::from_image(asset_server.load("white_queen.png"));
+                *sprite = Sprite::from_image(asset_server.load(WHITE_QUEEN_IMAGE));
                 commands.entity(entity).remove::<Pawn>();
             }
             if keys.just_released(KeyCode::KeyB) {
-                *sprite = Sprite::from_image(asset_server.load("white_bishop.png"));
+                *sprite = Sprite::from_image(asset_server.load(WHITE_BISHOP_IMAGE));
                 commands.entity(entity).remove::<Pawn>();
             }
             if keys.just_released(KeyCode::KeyK) {
-                *sprite = Sprite::from_image(asset_server.load("white_knight.png"));
+                *sprite = Sprite::from_image(asset_server.load(WHITE_KNIGHT_IMAGE));
                 commands.entity(entity).remove::<Pawn>();
             }
             if keys.just_released(KeyCode::KeyR) {
-                *sprite = Sprite::from_image(asset_server.load("white_rook.png"));
+                *sprite = Sprite::from_image(asset_server.load(WHITE_ROOK_IMAGE));
                 commands.entity(entity).remove::<Pawn>();
             }
         }
