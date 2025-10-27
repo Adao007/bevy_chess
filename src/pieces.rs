@@ -4,9 +4,9 @@ use bevy::prelude::*;
 // Edit piece png(s) here
 
 // Black Pieces PNG
-const BLACK_PAWN_IMAGE: &str = "clove.png";
+const BLACK_PAWN_IMAGE: &str = "dandelion.png";
 const BLACK_ROOK_IMAGE: &str = "black_rook.png";
-const BLACK_KNIGHT_IMAGE: &str = "black_knight.png";
+const BLACK_KNIGHT_IMAGE: &str = "clove.png";
 const BLACK_BISHOP_IMAGE: &str = "black_bishop.png";
 const BLACK_QUEEN_IMAGE: &str = "black_queen.png";
 const BLACK_KING_IMAGE: &str = "black_king.png";
